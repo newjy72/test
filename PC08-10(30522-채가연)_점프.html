@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>성남시 새남&새롱 점프 레이스</title>
+    <style>
+        /* 성남시 상징 색상 적용 */
+        :root {
+            --sn-blue: #005691;   /* 성남 메인 블루 */
+            --sn-yellow: #FFD700; /* 성남 옐로우 */
+            --sn-green: #00A651;  /* 성남 그린 */
+            --bg-dark: #1a1a1a;
+        }
+
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg-dark); overflow: hidden; font-family: 'Malgun Gothic', sans-serif; }
+        #gameContainer { position: relative; width: 800px; height: 400px; box-shadow: 0 0 50px rgba(0,0,0,0.8); overflow: hidden; border-radius: 15px; border: 2px solid #333; }
+        
+        /* 게임 배경: 성남시 하늘 느낌 */
+        canvas { background: linear-gradient(to bottom, #003366 0%, #005691 70%, #87CEEB 100%); display: block; }
+        
+        /* UI 공통 스타일 */
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); color: white; z-index: 10; backdrop-filter: blur(5px); transition: 0.3s; }
+        .hud { position: absolute; top: 20px; left: 20px; font-size: 18px; font-weight: bold; color: white; z-index: 5; pointer-events: none; text-shadow: 2px 2px 2px rgba(0,0,0,0.8); }
+        
+        /* 버튼 스타일 */
+        .menu-btns { display: flex; flex-direction: column; gap: 12px; width: 220px; }
+        button { padding: 12px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; transition: 0.2s; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+        button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+        
+        .btn-start { background: var(--sn-green); color: white; font-size: 22px; padding: 15px; }
+        .btn-start:hover { background: #00813f; }
+        .btn-sub { background: var(--sn-blue); color: white; border: 1px solid #0077c8; }
+        .btn-sub:hover { background: #004070; }
+        .btn-close { background: #cc3333; color: white; margin-top: 25px; width: 120px; }
+
+        /* 캐릭터 선택 창 */
+        #charSelectModal { display: none; }
+        .char-container { display: flex; gap: 30px; margin-top: 30px; }
+        .char-card { border: 4px solid transparent; border-radius: 15px; padding: 20px; cursor: pointer; transition: 0.3s; text-align: center; background: rgba(255,255,255,0.05); width: 120px; }
+        .char-card:hover { background: rgba(255,255,255,0.1); transform: translateY(-5px); }
+        .char-card.selected { border-color: var(--sn-yellow); background: rgba(255, 215, 0, 0.1); box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+        
+        /* 캐릭터 캔버스 프리뷰 */
+        .char-preview-canvas { background: none; border: none; }
+        .char-name { font-size: 20px; font-weight: bold; margin-top: 15px; }
+
+        /* 도움말 창 */
+        #howToModal { display: none; }
+        #howToModal .content { background: #fff; color: #333; padding: 35px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        #howToModal h2 { color: var(--sn-blue); margin-top: 0; }
+        #howToModal p { margin: 12px 0; font-size: 17px; line-height: 1.5; text-align: left; }
+        #howToModal b { color: var(--sn-green); }
+    </style>
+</head>
+<body>
+
+    <div id="gameContainer">
+        <div class="hud">
+            성남 <span id="charNameDisplay" style="color:var(--sn-green)">새남</span> 런! | 
+            Score: <span id="score">0</span> | 
+            Speed: x<span id="speed">1.0</span>
+        </div>
+
+        <div id="startScreen" class="ui-layer">
+            <h1 style="font-size: 40px; margin-bottom: 5px; color: var(--sn-yellow); text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">성남시 새남&새롱 점프</h1>
+            <p style="font-size: 16px; margin-bottom: 35px; color: #ccc; letter-spacing: 1px;"></p>
+            <div class="menu-btns">
+                <button class="btn-start" onclick="startGame()">게임 시작</button>
+                <button class="btn-sub" onclick="openCharSelect()">캐릭터 설정</button>
+                <button class="btn-sub" onclick="toggleHowTo(true)">게임 방법</button>
+            </div>
+            <p style="position:absolute; bottom:10px; font-size:12px; color:#666;">© Seongnam City Mascot Game Concept</p>
+        </div>
+
+        <div id="charSelectModal" class="ui-layer">
+            <h2 style="color:white; margin-bottom:10px;">플레이할 캐릭터 선택</h2>
+            <p style="color:#aaa; margin-top:0;">둘 중 하나를 클릭하세요.</p>
+            <div class="char-container">
+                <div id="charSaenam" class="char-card selected" onclick="selectCharacter('saenam')">
+                    <canvas id="preSaenam" width="80" height="90" class="char-preview-canvas"></canvas>
+                    <div class="char-name" style="color: var(--sn-green);">새남</div>
+                </div>
+                <div id="charSaerong" class="char-card" onclick="selectCharacter('saerong')">
+                    <canvas id="preSaerong" width="80" height="90" class="char-preview-canvas"></canvas>
+                    <div class="char-name" style="color: var(--sn-yellow);">새롱</div>
+                </div>
+            </div>
+            <button class="btn-close" onclick="closeCharSelect()">확인</button>
+        </div>
+
+        <div id="howToModal" class="ui-layer">
+            <div class="content">
+                <h2>🎮 게임 방법</h2>
+                <hr style="border:1px solid #eee; margin: 15px 0;">
+                <p>⌨️ <b>Space바:</b> 점프!</p>
+                <p>⌨️ <b>Space바 x2:</b> 공중 더블 점프!!</p>
+                <p>⭐ <b>별:</b> 먹으면 +300점!</p>
+                <p>🕳️ <b>구멍:</b> 빠지면 게임 오버 ㅠㅠ</p>
+                <p>⏱️ 시간이 지날수록 <b>속도</b>가 빨라집니다!</p>
+                <button class="btn-close" onclick="toggleHowTo(false)">닫기</button>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        // --- 게임 엔진 및 환경 설정 ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800; canvas.height = 400;
+
+        // HUD 요소
+        const scoreEl = document.getElementById('score');
+        const speedEl = document.getElementById('speed');
+        const nameEl = document.getElementById('charNameDisplay');
+
+        // 게임 상태 변수
+        let currentState = 'MAIN_MENU';
+        let score, gameSpeed, frame, loopId;
+        let obstacles = [];
+        let stars = [];
+
+        // 캐릭터 선택 상태
+        let selectedChar = 'saenam'; 
+
+        // 플레이어 물리 객체
+        const player = {
+            x: 100, y: 0, w: 50, h: 70, // 충돌 박스 크기
+            dy: 0, jumpForce: 14, gravity: 0.7,
+            jumpCount: 0
+        };
+
+        // --- 마스코트 그리기 함수 (코드로 구현) ---
+        // 학생들이 이 함수 내용을 바꾸면 캐릭터가 변합니다.
+
+        function drawMascot(pCtx, x, y, type) {
+            pCtx.save();
+            pCtx.translate(x, y);
+
+            if (type === 'saenam') {
+                // --- 새남 그리기 (왼쪽, 초록색) ---
+                // 머리 (파란 헬멧)
+                pCtx.fillStyle = '#005691'; // sn-blue
+                pCtx.beginPath(); pCtx.ellipse(25, 25, 25, 25, 0, 0, Math.PI * 2); pCtx.fill();
+                // 얼굴 (초록)
+                pCtx.fillStyle = '#00A651'; // sn-green
+                pCtx.beginPath(); pCtx.ellipse(25, 30, 20, 18, 0, 0, Math.PI * 2); pCtx.fill();
+                // 눈 (블루)
+                pCtx.fillStyle = '#fff'; pCtx.beginPath(); pCtx.arc(17, 28, 4, 0, Math.PI*2); pCtx.fill();
+                pCtx.arc(33, 28, 4, 0, Math.PI*2); pCtx.fill();
+                pCtx.fillStyle = '#005691'; pCtx.beginPath(); pCtx.arc(17, 28, 2, 0, Math.PI*2); pCtx.fill();
+                pCtx.arc(33, 28, 2, 0, Math.PI*2); pCtx.fill();
+                // 헬멧 위 별 (노랑)
+                pCtx.fillStyle = '#FFD700';
+                drawStar(pCtx, 25, 2, 5, 8, 4); pCtx.fill();
+
+            } else {
+                // --- 새롱 그리기 (오른쪽, 노란색) ---
+                // 머리 (파란 헬멧)
+                pCtx.fillStyle = '#005691'; // sn-blue
+                pCtx.beginPath(); pCtx.ellipse(25, 25, 25, 25, 0, 0, Math.PI * 2); pCtx.fill();
+                // 얼굴 (노랑)
+                pCtx.fillStyle = '#FFD700'; // sn-yellow
+                pCtx.beginPath(); pCtx.ellipse(25, 30, 20, 18, 0, 0, Math.PI * 2); pCtx.fill();
+                // 눈 (블루)
+                pCtx.fillStyle = '#fff'; pCtx.beginPath(); pCtx.arc(17, 28, 4, 0, Math.PI*2); pCtx.fill();
+                pCtx.arc(33, 28, 4, 0, Math.PI*2); pCtx.fill();
+                pCtx.fillStyle = '#005691'; pCtx.beginPath(); pCtx.arc(17, 28, 2, 0, Math.PI*2); pCtx.fill();
+                pCtx.arc(33, 28, 2, 0, Math.PI*2); pCtx.fill();
+                // 헬멧 위 잎사귀 (초록)
+                pCtx.fillStyle = '#00A651';
+                pCtx.beginPath();
+                pCtx.moveTo(25, 5); pCtx.quadraticCurveTo(15, -5, 25, -15);
+                pCtx.quadraticCurveTo(35, -5, 25, 5); pCtx.fill();
+            }
+
+            // 몸통 (공통 파랑)
+            pCtx.fillStyle = '#005691';
+            pCtx.beginPath(); pCtx.ellipse(25, 55, 12, 15, 0, 0, Math.PI * 2); pCtx.fill();
+            // 팔다리 (공통 파랑, 간단하게)
+            pCtx.fillRect(10, 50, 5, 15); pCtx.fillRect(35, 50, 5, 15); // 팔
+            pCtx.fillRect(15, 65, 6, 15); pCtx.fillRect(29, 65, 6, 15); // 다리
+
+            pCtx.restore();
+        }
+
+        // 별 그리기 유틸리티
+        function drawStar(pCtx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3; let x = cx; let y = cy; let step = Math.PI / spikes;
+            pCtx.beginPath(); pCtx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; pCtx.lineTo(x, y); rot += step;
+                x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; pCtx.lineTo(x, y); rot += step;
+            }
+            pCtx.lineTo(cx, cy - outerRadius); pCtx.closePath();
+        }
+
+        // --- UI 함수 ---
+        function toggleHowTo(show) { document.getElementById('howToModal').style.display = show ? 'flex' : 'none'; }
+        
+        function openCharSelect() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('charSelectModal').style.display = 'flex';
+            // 프리뷰 캔버스 그리기
+            drawMascot(document.getElementById('preSaenam').getContext('2d'), 15, 10, 'saenam');
+            drawMascot(document.getElementById('preSaerong').getContext('2d'), 15, 10, 'saerong');
+        }
+
+        function closeCharSelect() {
+            document.getElementById('charSelectModal').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+            // HUD 업데이트
+            const isSaenam = (selectedChar === 'saenam');
+            nameEl.innerText = isSaenam ? '새남' : '새롱';
+            nameEl.style.color = isSaenam ? 'var(--sn-green)' : 'var(--sn-yellow)';
+        }
+
+        function selectCharacter(char) {
+            selectedChar = char;
+            document.getElementById('charSaenam').classList.remove('selected');
+            document.getElementById('charSaerong').classList.remove('selected');
+            document.getElementById('char'+char.charAt(0).toUpperCase() + char.slice(1)).classList.add('selected');
+        }
+
+        // --- 게임 로직 ---
+        function initGame() {
+            score = 0; gameSpeed = 6; frame = 0;
+            obstacles = []; stars = [];
+            player.y = 350 - player.h; player.dy = 0; player.jumpCount = 0;
+            scoreEl.innerText = "0"; speedEl.innerText = "1.0";
+        }
+
+        function startGame() {
+            if(currentState === 'PLAYING') return;
+            document.getElementById('startScreen').style.display = 'none';
+            initGame();
+            currentState = 'PLAYING';
+            gameLoop();
+        }
+
+        function gameOver() {
+            currentState = 'GAME_OVER';
+            cancelAnimationFrame(loopId);
+            // 성남시 블루/그린 톤의 경고창
+            alert(`⚠️ 게임 오버! \n\n성남 ${nameEl.innerText}의 최종 점수: ${score}점`);
+            document.getElementById('startScreen').style.display = 'flex';
+            currentState = 'MAIN_MENU';
+        }
+
+        // 키 입력 (더블 점프)
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && currentState === 'PLAYING') {
+                e.preventDefault();
+                if (player.jumpCount < 2) {
+                    player.dy = -player.jumpForce;
+                    player.jumpCount++;
+                }
+            }
+        });
+
+        // 물리 및 상태 업데이트
+        function update() {
+            frame++;
+            // 속도 증가 (8초마다 x0.1)
+            if (frame % 480 === 0) {
+                gameSpeed += 0.6;
+                speedEl.innerText = (gameSpeed / 6).toFixed(1);
+            }
+
+            // 플레이어 중력
+            player.dy += player.gravity;
+            player.y += player.dy;
+
+            // 바닥 착지 (구멍 아닌 곳)
+            if (player.y + player.h > 350) {
+                player.y = 350 - player.h;
+                player.dy = 0;
+                player.jumpCount = 0;
+            }
+
+            // 구멍 생성
+            if (frame % 130 === 0) {
+                obstacles.push({ x: canvas.width, w: 90 });
+            }
+
+            // 구멍 이동 및 충돌
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.x -= gameSpeed;
+                
+                // 구멍 충돌 체크 (플레이어 발 위치)
+                if (player.x + player.w*0.7 > obs.x && player.x + player.w*0.3 < obs.x + obs.w && player.y + player.h >= 348) {
+                    gameOver();
+                    return;
+                }
+                
+                // 화면 밖 구멍 제거
+                if (obs.x + obs.w < 0) obstacles.splice(i, 1);
+            }
+
+            // 별 생성 (3초)
+            if (frame % 180 === 0) {
+                stars.push({ x: canvas.width, y: 120 + Math.random() * 120, w: 30, collected: false });
+            }
+
+            // 별 이동 및 획득
+            for (let i = stars.length - 1; i >= 0; i--) {
+                let star = stars[i];
+                star.x -= gameSpeed;
+                
+                // 별 충돌 (획득)
+                if (!star.collected && player.x < star.x + 30 && player.x + player.w > star.x && player.y < star.y + 30 && player.y + player.h > star.y) {
+                    star.collected = true;
+                    score += 300;
+                    scoreEl.innerText = score;
+                }
+                
+                // 화면 밖 별 제거
+                if (star.x + 30 < 0) stars.splice(i, 1);
+            }
+        }
+
+        // 화면 그리기
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. 잔디 길 (성남 그린)
+            ctx.fillStyle = '#00A651';
+            ctx.fillRect(0, 350, canvas.width, 50);
+
+            // 2. 구멍 (배경색과 같게)
+            ctx.fillStyle = '#87CEEB'; // 가장 아래 배경색
+            obstacles.forEach(obs => ctx.fillRect(obs.x, 350, obs.w, 50));
+
+            // 3. 별 (노랑 원)
+            stars.forEach(star => {
+                if (!star.collected) {
+                    ctx.fillStyle = '#FFD700'; // sn-yellow
+                    ctx.beginPath(); ctx.arc(star.x + 15, star.y + 15, 12, 0, Math.PI * 2); ctx.fill();
+                    // 반짝임 효과
+                    ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
+                }
+            });
+
+            // 4. 플레이어 (마스코트 코드로 그리기)
+            drawMascot(ctx, player.x, player.y, selectedChar);
+        }
+
+        // 게임 루프
+        function gameLoop() {
+            if (currentState !== 'PLAYING') return;
+            update();
+            draw();
+            loopId = requestAnimationFrame(gameLoop);
+        }
+
+// --- 추가 변수 및 초기화 설정 ---
+let monsters = [];
+let clouds = [];
+let lastStarTime = 0;
+
+// 구름 초기화 함수
+function initClouds() {
+    clouds = [];
+    for (let i = 0; i < 5; i++) {
+        clouds.push({
+            x: Math.random() * canvas.width,
+            y: 30 + Math.random() * 100,
+            w: 100,
+            speedFactor: 0.2 + Math.random() * 0.4
+        });
+    }
+}
+
+// 몬스터 생성 함수
+function spawnMonster() {
+    monsters.push({
+        x: canvas.width,
+        y: 200 + Math.random() * 100, // 점프해서 피할 수 있는 높이
+        w: 40,
+        h: 40,
+        speed: gameSpeed * 1.2,
+        color: '#FF4500' // 주황색 몬스터
+    });
+}
+
+// --- 기능 확장 및 덮어쓰기 ---
+
+// 1. 별 생성 주기를 0.7초(약 42프레임)로 변경하기 위해 기존 update 내부 로직을 보강합니다.
+// 2. ESC 키 입력 추가
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' && currentState === 'PLAYING') {
+        if (confirm("게임을 중단하고 메인 화면으로 돌아갈까요?")) {
+            currentState = 'MAIN_MENU';
+            document.getElementById('startScreen').style.display = 'flex';
+            cancelAnimationFrame(loopId);
+        }
+    }
+});
+
+// 3. 기존 update 함수를 확장 (기존 update 함수 안에 아래 내용을 추가하거나 교체하세요)
+const originalUpdate = update;
+update = function() {
+    originalUpdate(); // 기존 물리 로직 실행
+
+    // 구름 이동
+    clouds.forEach(c => {
+        c.x -= gameSpeed * c.speedFactor;
+        if (c.x + c.w < -50) c.x = canvas.width + 50;
+    });
+
+    // 0.7초 주기(약 42프레임) 별 생성 (기존 180프레임 로직 제거 권장)
+    if (frame % 42 === 0) { 
+        stars.push({ x: canvas.width, y: 120 + Math.random() * 120, w: 30, collected: false });
+    }
+
+    // 몬스터 생성 (약 3초마다)
+    if (frame % 180 === 0) spawnMonster();
+
+    // 몬스터 이동 및 충돌 처리
+    for (let i = monsters.length - 1; i >= 0; i--) {
+        let m = monsters[i];
+        m.x -= m.speed;
+
+        // 플레이어와 몬스터 충돌 체크
+        if (player.x < m.x + m.w - 10 && 
+            player.x + player.w > m.x + 10 && 
+            player.y < m.y + m.h - 10 && 
+            player.y + player.h > m.y + 10) {
+            gameOver();
+        }
+
+        if (m.x + m.w < 0) monsters.splice(i, 1);
+    }
+};
+
+// 4. 기존 draw 함수를 확장
+const originalDraw = draw;
+draw = function() {
+    // 배경 구름 그리기 (가장 먼저)
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // 새로고침
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    clouds.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 20, 0, Math.PI * 2);
+        ctx.arc(c.x + 20, c.y - 10, 25, 0, Math.PI * 2);
+        ctx.arc(c.x + 40, c.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    originalDraw(); // 기존 잔디, 구멍, 별, 플레이어 그리기
+
+    // 몬스터 그리기
+    monsters.forEach(m => {
+        ctx.fillStyle = m.color;
+        // 뾰족한 몬스터 모양
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y + m.h);
+        ctx.lineTo(m.x + m.w / 2, m.y);
+        ctx.lineTo(m.x + m.w, m.y + m.h);
+        ctx.fill();
+        // 눈 그리기
+        ctx.fillStyle = "white";
+        ctx.fillRect(m.x + 10, m.y + 20, 5, 5);
+        ctx.fillRect(m.x + 25, m.y + 20, 5, 5);
+    });
+};
+
+// 5. 게임 시작 시 초기화 추가
+const originalInitGame = initGame;
+initGame = function() {
+    originalInitGame();
+    monsters = [];
+    initClouds();
+};
+
+    </script>
+</body>
+</html>
