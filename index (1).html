@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>응프화 화면구현 논술형 수행평가 보기 자료</title>
+  <style>
+    /* 기본 설정: 모바일에서도 글자가 너무 작아지지 않도록 구성 */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      background: #f4f6fb;
+      color: #222;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 28px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, #243b8f, #2f5bea);
+      color: #fff;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(22px, 5vw, 34px);
+    }
+
+    header p {
+      margin: 0;
+      font-size: clamp(14px, 3.5vw, 17px);
+      opacity: 0.95;
+    }
+
+    main {
+      width: min(100%, 1000px);
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+    }
+
+    .notice {
+      margin-bottom: 18px;
+      padding: 16px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid #dde3f0;
+      box-shadow: 0 8px 22px rgba(31, 48, 96, 0.08);
+    }
+
+    .notice strong {
+      color: #243b8f;
+    }
+
+    .card-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 260px;
+      padding: 20px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid #dde3f0;
+      box-shadow: 0 8px 22px rgba(31, 48, 96, 0.08);
+    }
+
+    .card.problem {
+      border-top: 8px solid #d94444;
+    }
+
+    .card.improved {
+      border-top: 8px solid #2f5bea;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .tag {
+      display: inline-block;
+      width: fit-content;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .problem .tag {
+      background: #ffe8e8;
+      color: #a52121;
+    }
+
+    .improved .tag {
+      background: #e8efff;
+      color: #2246b8;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .button-area {
+      margin-top: auto;
+    }
+
+    .open-link {
+      display: block;
+      width: 100%;
+      min-height: 48px;
+      padding: 13px 16px;
+      border-radius: 12px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 700;
+      color: #fff;
+      background: #243b8f;
+    }
+
+    .problem .open-link {
+      background: #b83232;
+    }
+
+    .improved .open-link {
+      background: #2f5bea;
+    }
+
+    .open-link:focus,
+    .open-link:hover {
+      outline: 3px solid rgba(47, 91, 234, 0.25);
+      filter: brightness(0.96);
+    }
+
+    .guide {
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid #dde3f0;
+      box-shadow: 0 8px 22px rgba(31, 48, 96, 0.08);
+    }
+
+    .guide h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    footer {
+      padding: 18px;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* 핸드폰 화면: 카드가 세로로 쌓이고 버튼을 누르기 쉽게 유지 */
+    @media (max-width: 700px) {
+      header {
+        padding: 24px 14px;
+      }
+
+      main {
+        padding: 16px 12px 28px;
+      }
+
+      .card-list {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        min-height: auto;
+        padding: 18px;
+      }
+
+      .card h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>응프화 화면구현 논술형 수행평가 보기 자료</h1>
+    <p>개선 전 화면과 개선 후 화면을 비교하며 문제점과 개선 방향을 분석하세요.</p>
+  </header>
+
+  <main>
+    <section class="notice" aria-labelledby="notice-title">
+      <h2 id="notice-title">보기 자료 안내</h2>
+      <p>
+        아래 두 자료는 같은 과제 관리 시스템 화면을 바탕으로 구성되었습니다.
+        <strong>before.html</strong>은 사용성·가독성·모바일 대응 측면에서 문제점이 잘 드러나도록 일부러 불편하게 만든 예시이고,
+        <strong>after.html</strong>은 그 문제를 어느 정도 개선한 예시입니다.
+      </p>
+    </section>
+
+    <section class="card-list" aria-label="비교 자료 링크">
+      <article class="card problem">
+        <span class="tag">문제점 관찰</span>
+        <h2>개선 전 화면</h2>
+        <p>화면구현 관점에서 어떤 부분이 불편하거나 부족한지 실제로 눌러 보며 찾아보세요.</p>
+        <ul>
+          <li>탭 메뉴의 선택 상태가 잘 보이는가?</li>
+          <li>모바일 화면에서 표를 확인하기 쉬운가?</li>
+          <li>버튼 크기와 위치가 사용하기 편한가?</li>
+          <li>로그아웃 위치를 쉽게 찾을 수 있는가?</li>
+        </ul>
+        <div class="button-area">
+          <a class="open-link" href="before.html">before.html 열기</a>
+        </div>
+      </article>
+
+      <article class="card improved">
+        <span class="tag">개선점 확인</span>
+        <h2>개선 후 화면</h2>
+        <p>개선된 화면에서 문제점이 어떻게 완화되었는지 비교해 보세요.</p>
+        <ul>
+          <li>활성 탭이 더 분명하게 표현되었는가?</li>
+          <li>표 영역이 모바일에서도 확인 가능하게 처리되었는가?</li>
+          <li>터치하기 쉬운 버튼 크기를 갖추었는가?</li>
+          <li>중요 기능이 더 적절한 위치에 배치되었는가?</li>
+        </ul>
+        <div class="button-area">
+          <a class="open-link" href="after.html">after.html 열기</a>
+        </div>
+      </article>
+    </section>
+
+    <section class="guide" aria-labelledby="essay-guide-title">
+      <h2 id="essay-guide-title">논술형 답안 작성 방향</h2>
+      <p>
+        단순히 “예쁘다 / 안 예쁘다”라고 쓰기보다, 사용자가 화면을 사용할 때 겪는 불편함을 근거로 설명하세요.
+        예를 들어 <strong>가독성, 접근성, 반응형 화면, 버튼 사용성, 정보 배치</strong> 같은 기준으로 비교하면 좋습니다.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>성일정보고등학교 응용프로그래밍 화면구현 수행평가 자료</p>
+  </footer>
+</body>
+</html>
