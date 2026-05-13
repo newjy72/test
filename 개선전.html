@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>과제 제출 시스템 - 개선 전</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f0f0f0; }
+        header { background-color: #333; color: white; padding: 10px; text-align: center; }
+        main { padding: 20px; }
+        /* 문제점 1: 탭 메뉴 구분이 안 됨 */
+        .tabs { margin-bottom: 20px; }
+        .tabs button { padding: 10px; border: 1px solid #ccc; background: #eee; cursor: pointer; }
+        .tabs button.active { background: #ddd; } /* 활성화 상태가 거의 티 안 남 */
+        
+        /* 문제점 2: 모바일에서 표가 잘림 (고정 너비) */
+        table { width: 800px; border-collapse: collapse; background: white; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        
+        /* 문제점 3: 버튼이 너무 작음 */
+        .btn-small { font-size: 10px; padding: 2px 5px; }
+        
+        /* 문제점 4: 로그아웃이 맨 아래 숨어 있음 */
+        footer { margin-top: 50px; padding: 20px; border-top: 1px solid #ccc; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>과제 관리 시스템</h1>
+    </header>
+    <main>
+        <div class="tabs">
+            <button>공지사항</button>
+            <button class="active">제출 확인</button>
+            <button>과제방</button>
+        </div>
+        
+        <h2>제출 현황</h2>
+        <p>※ 모바일에서는 화면을 옆으로 밀어서 확인하세요. (불편함 유발)</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>학번</th>
+                    <th>이름</th>
+                    <th>과제명</th>
+                    <th>제출일시</th>
+                    <th>상태</th>
+                    <th>관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>10101</td>
+                    <td>홍길동</td>
+                    <td>UI 개선 제안서</td>
+                    <td>2026-04-15 10:00</td>
+                    <td>제출완료</td>
+                    <td><button class="btn-small">보기</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <footer>
+        <p>시스템 문의: 02-123-4567 | <a href="#">로그아웃</a></p>
+    </footer>
+    <script>
+  // 탭 전환 기능: 화면은 바뀌지만 디자인적 피드백이 약함
+  const tabs = document.querySelectorAll('.tabs button');
+  const sections = document.querySelectorAll('main section');
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => {
+      // 모든 탭에서 active 제거 (티가 별로 안 남)
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // 섹션 전환 (단순히 슥 바뀌기만 함)
+      sections.forEach(s => s.style.display = 'none');
+      if(sections[index]) sections[index].style.display = 'block';
+    });
+  });
+
+  // 로그아웃: 찾기도 힘든데 눌러도 아주 작은 경고창만 뜸
+  document.querySelector('footer a').addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('로그아웃 되었습니다.');
+  });
+</script>
+</body>
+</html>

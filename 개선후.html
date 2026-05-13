@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>과제 제출 시스템 - 개선 후</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 0; background-color: #f5f7fb; color: #333; }
+        /* 개선 1: 로그아웃 상단 배치 및 헤더 가독성 */
+        header { background-color: #2f5bea; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 20px; }
+        .logout-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; text-decoration: none; font-size: 14px; }
+        
+        main { padding: 20px; max-width: 1000px; margin: 0 auto; }
+        
+        /* 개선 2: 탭 메뉴 활성화 강조 */
+        .tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 2px solid #2f5bea; }
+        .tabs button { padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 16px; color: #666; }
+        .tabs button.active { background: #2f5bea; color: white; font-weight: bold; border-radius: 5px 5px 0 0; }
+        
+        /* 개선 3: 반응형 표 (모바일에서 스크롤 가능하게 감쌈) */
+        .table-container { width: 100%; overflow-x: auto; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: #f8f9fa; border-bottom: 2px solid #eee; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        
+        /* 개선 4: 버튼 크기 확대 (터치 최적화) */
+        .btn-action { background: #2f5bea; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px; min-width: 80px; }
+        
+        @media (max-width: 600px) {
+            header h1 { font-size: 16px; }
+            .tabs button { padding: 10px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>과제 관리 시스템</h1>
+        <a href="#" class="logout-btn">로그아웃</a>
+    </header>
+    <main>
+        <nav class="tabs">
+            <button>공지사항</button>
+            <button class="active">제출 확인</button>
+            <button>과제방</button>
+        </nav>
+        
+        <section>
+            <h2>제출 현황</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>학번</th>
+                            <th>이름</th>
+                            <th>과제명</th>
+                            <th>제출일시</th>
+                            <th>상태</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>10101</td>
+                            <td>홍길동</td>
+                            <td>UI 개선 제안서</td>
+                            <td>2026-04-15 10:00</td>
+                            <td><span style="color: #2f5bea; font-weight: bold;">제출완료</span></td>
+                            <td><button class="btn-action">상세보기</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script>
+  const tabs = document.querySelectorAll('.tabs button');
+  const currentTitle = document.querySelector('h2'); // 현재 화면 제목
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // 1. 선택된 탭 강조 (색상과 굵기 변화 확연함)
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // 2. 현재 위치를 제목으로 명확히 표시 (학생 요구사항 반영)
+      const tabName = tab.innerText;
+      currentTitle.innerText = `현재 화면: ${tabName}`;
+      
+      // 실제 전환 시각 효과 (간단한 알림)
+      console.log(`${tabName} 화면으로 이동했습니다.`);
+    });
+  });
+
+  // 로그아웃: 상단 버튼 클릭 시 명확한 확인 절차
+  document.querySelector('.logout-btn').addEventListener('click', () => {
+    if(confirm('로그아웃 하시겠습니까?')) {
+      alert('안전하게 로그아웃 되었습니다.');
+    }
+  });
+</script>
+</body>
+</html>
